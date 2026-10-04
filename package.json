@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",
-    "check": "tsc --noEmit",
+    "check": "tsc --noEmit && node --check public/app.js && node --check public/live.js && node --check public/pcm-worklet.js",
     "test": "tsx --test tests/*.test.ts",
     "deploy": "wrangler deploy",
     "db:local": "wrangler d1 execute voice-line-assistant --local --file=schema.sql"

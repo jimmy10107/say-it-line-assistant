@@ -167,11 +167,17 @@ export default {
         }
         const card=await env.DB.prepare('SELECT mime_type FROM cards WHERE object_key=?').bind(key).first<{mime_type:string}>();
         if(!card)return new Response('Not found',{status:404});
-        const rows=await env.DB.prepare('SELECT data FROM card_chunks WHERE object_key=? ORDER BY part').bind(key).all<{data:number[]}>();
-        const total=rows.results.reduce((sum,row)=>sum+row.data.length,0);
+        const parts=await env.DB.prepare('SELECT part FROM card_chunks WHERE object_key=? ORDER BY part').bind(key).all<{part:number}>();
+        if(!parts.results.length||parts.results.length>20)return new Response('Not found',{status:404});
+        const chunks:Uint8Array[]=[];let total=0;
+        for(const part of parts.results){
+          const row=await env.DB.prepare('SELECT data FROM card_chunks WHERE object_key=? AND part=?').bind(key,part.part).first<{data:number[]}>();
+          if(!row||row.data.length>524288)return new Response('Not found',{status:404});
+          const chunk=new Uint8Array(row.data);chunks.push(chunk);total+=chunk.length;
+        }
         if(!total||total>10000000)return new Response('Not found',{status:404});
         const bytes=new Uint8Array(total);let offset=0;
-        for(const row of rows.results){bytes.set(row.data,offset);offset+=row.data.length;}
+        for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.length;}
         return new Response(bytes,{headers:{'Content-Type':card.mime_type,'Cache-Control':'private, max-age=300','X-Content-Type-Options':'nosniff'}});
       }
       const response=await env.ASSETS.fetch(request);
