@@ -80,7 +80,7 @@ $('schedule-card').onclick=()=>{if(card)openReminder({message:'送給你的一�
 $('mic').onclick=async()=>{
  if(demo){toast('示範模式不會開啟麥克風。請用文字或「新增提醒」體驗；設定 Gemini 後可啟用即時語音。');return;}
  if(!token){showLogin();return;}if(!config.live){toast('請先設定 Gemini 金鑰。');return;}
- if(live){await live.stop();live=null;return;}
+ if(live&&!live.ended){await live.stop();live=null;return;}live=null;
  try{live=new LiveVoice({getToken:()=>api('live-token','POST',{}),contacts:()=>contacts,onStatus:(text,active)=>{$('voice-state').textContent=text;$('mic').classList.toggle('listening',active);$('mic').setAttribute('aria-label',active?'結束語音對話':'開始語音對話');},onTranscript:text=>$('voice-caption').textContent=text,onDraft:openReminder,onCard:prompt=>{view('cards');$('card-prompt').value=prompt;toast('賀卡描述已填入。確認後按「生成賀卡」。');},onError:text=>toast(text)});await live.start();}catch(error){await live?.stop();live=null;toast(error.message);}
 };
 async function init(){

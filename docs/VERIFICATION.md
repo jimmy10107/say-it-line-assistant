@@ -10,15 +10,16 @@
 - 瀏覽器示範頁：相對時間草稿、最後確認表單、建立提醒、取消提醒與資料清單。
 - 桌面與 390 × 844 手機版介面檢查。
 - 安裝依賴時 `npm audit` 回報 0 個已知漏洞。
+- GitHub 程式已推送，GitHub Pages 建置成功並經瀏覽器確認示範模式。
+- Cloudflare Worker 已部署，APAC D1 與每分鐘 Cron 已建立；正式頁面確認顯示待設定的私人服務。
 
 排程測試用的是模擬 LINE 回應，本機設定用的是假的服務值，未對真實 LINE 收件人發送訊息。
 
 ## 尚需正式服務驗收
 
-- Cloudflare 正式 Worker／D1／R2 部署與 Cron。
 - Gemini Live 真實麥克風、音訊播放與模型工具呼叫。
-- Nano Banana 2 圖片生成與 R2 儲存。
+- Nano Banana 2 圖片生成與 D1 圖片儲存。
 - LINE 官方帳號 Webhook 加好友同步。
 - App 關閉後仍收到文字與賀卡。
 
-完整設定与驗收步驟見 [DEPLOYMENT.md](DEPLOYMENT.md)。完成實際驗收後更新本檔，勿把程式存在或模擬測試等同於外部服務已通過。
+完整設定與驗收步驟見 [DEPLOYMENT.md](DEPLOYMENT.md)。完成實際驗收後更新本檔，勿把程式存在或模擬測試等同於外部服務已通過。

@@ -4,8 +4,7 @@
   "main": "src/worker.ts",
   "compatibility_date": "2026-10-04",
   "assets": {"directory": "./public", "binding": "ASSETS", "run_worker_first": ["/api/*", "/media/*"]},
-  "d1_databases": [{"binding": "DB", "database_name": "voice-line-assistant", "database_id": "REPLACE_WITH_D1_DATABASE_ID"}],
-  "r2_buckets": [{"binding": "CARDS", "bucket_name": "voice-line-cards"}],
+  "d1_databases": [{"binding": "DB", "database_name": "voice-line-assistant", "database_id": "949e972a-a7d0-4885-8022-ffbdc11f96e0"}],
   "triggers": {"crons": ["* * * * *"]},
   "vars": {"GEMINI_LIVE_MODEL": "gemini-3.8-live", "GEMINI_IMAGE_MODEL": "gemini-3.1-flash-image", "GEMINI_TEXT_MODEL": "gemini-3.8-flash"}
 }

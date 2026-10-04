@@ -8,7 +8,7 @@
 | App 圖示 | 可編輯 SVG 聲波對話圖示、PWA PNG 圖示 |
 | 功能需求 | 單一管理者、手機／電腦、語音提醒與賀卡 |
 | Git 版本管理 | 新 GitHub 專案、提交、後續分支與 revert |
-| 雲端與金鑰 | Worker、D1、R2；金鑰存 Secrets |
+| 雲端與金鑰 | Worker 與 D1；金鑰存 Secrets |
 | App 測試 | 安全與時間測試、本機 API、桌面與手機介面 |
 | 修改與新功能 | AGENTS.md、測試、手動正式部署工作流程 |
 | 賀卡擴充 | Gemini 圖片生成、預覽、確認後 LINE 排程 |
@@ -21,7 +21,7 @@
 - [Google 官方 gemini-api-dev](https://github.com/google-gemini/gemini-skills/tree/main/skills/gemini-api-dev)：目前 SDK、圖片生成與服務端 API。
 - [Google 官方 gemini-live-api-dev](https://github.com/google-gemini/gemini-skills/tree/main/skills/gemini-live-api-dev)：即時語音、PCM、工具呼叫與短效 token。
 
-兩個 Gemini skill 已安装到使用者的 Codex skills 資料夾。本次讀取並使用；下個回合可自動發現。來源提交：`6fee1bec62d6a0ca92c1d0e34d62ff11f70c498a`。
+兩個 Gemini skill 已安裝到使用者的 Codex skills 資料夾。本次讀取並使用；下個回合可自動發現。來源提交：`6fee1bec62d6a0ca92c1d0e34d62ff11f70c498a`。
 
 ## 官方教學與參考
 

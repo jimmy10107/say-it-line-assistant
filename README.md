@@ -4,6 +4,8 @@
 
 **[打開 GitHub Pages 示範版](https://jimmy10107.github.io/say-it-line-assistant/)**
 
+**[正式 App 網址](https://say-it-line-assistant.jimmy10107-tw.workers.dev)**（雲端已部署，待私人服務金鑰與 LINE Webhook 設定）
+
 示範版僅使用本機瀏覽器資料，不開啟麥克風、不呼叫 Gemini、不傳送 LINE。正式功能的程式已包含在本專案，需設定 Cloudflare、Gemini 與 LINE 後啟用；未以真實帳號完成端到端驗證。
 
 ## 功能
@@ -46,7 +48,7 @@ npm run dev
 ## 實際限制
 
 - Cron 每分鐘檢查一次，網路與供應商可能增加延遲；不是秒級保證。
-- LINE API 成功表示平台接受請求，不表示收件人已收到或讀取；收件人必須符合 LINE 的發送条件。
+- LINE API 成功表示平台接受請求，不表示收件人已收到或讀取；收件人必須符合 LINE 的發送條件。
 - Gemini API、圖片生成、Cloudflare 與 LINE 的額度／費用由各帳號決定。程式不會自動註冊帳號、開通付款或產生金鑰。
 - 個人使用的單一管理者密碼系統；不適用多租戶或公開提供他人註冊。
 - 賀卡在確認前不會發送，但生成本身可能產生費用。圖片以隨機不可推測網址供 LINE 讀取；持有該網址的人可查看圖片。

@@ -1,7 +1,7 @@
 import { GoogleGenAI, Modality } from '@google/genai';
 import { AppError, validateReminder, retryDelay, sha256, passwordHash, safeEqual, verifyLineSignature } from './core';
 interface Env {
-  DB: D1Database; CARDS: R2Bucket; ASSETS: Fetcher;
+  DB: D1Database; CARDS?: R2Bucket; ASSETS: Fetcher;
   PASSWORD_HASH: string; PASSWORD_SALT: string; GEMINI_API_KEY: string;
   LINE_CHANNEL_SECRET: string; LINE_CHANNEL_ACCESS_TOKEN: string;
   GEMINI_LIVE_MODEL: string; GEMINI_IMAGE_MODEL: string; GEMINI_TEXT_MODEL: string; PUBLIC_ORIGIN: string;
@@ -107,8 +107,10 @@ async function api(request: Request, env: Env) {
     const bytes=Uint8Array.from(atob(img.data),x=>x.charCodeAt(0));
     if (bytes.length > 10000000) throw new AppError(502,'賀卡超過 LINE 圖片大小限制。');
     const id=crypto.randomUUID(), key=crypto.randomUUID()+crypto.randomUUID();
-    await env.CARDS.put(key,bytes,{httpMetadata:{contentType:img.mime_type}});
-    await env.DB.prepare('INSERT INTO cards(id,prompt,object_key,mime_type,created_at) VALUES(?,?,?,?,?)').bind(id,input.prompt,key,img.mime_type,Date.now()).run();
+    const statements=[env.DB.prepare('INSERT INTO cards(id,prompt,object_key,mime_type,created_at) VALUES(?,?,?,?,?)').bind(id,input.prompt,key,img.mime_type,Date.now())];
+    if (env.CARDS) await env.CARDS.put(key,bytes,{httpMetadata:{contentType:img.mime_type}});
+    else for(let offset=0,part=0;offset<bytes.length;offset+=524288,part++) statements.push(env.DB.prepare('INSERT INTO card_chunks(object_key,part,data) VALUES(?,?,?)').bind(key,part,bytes.slice(offset,offset+524288).buffer));
+    await env.DB.batch(statements);
     return json({id,url:url.origin+'/media/'+key});
   }
   if (path === '/api/live-token' && method === 'POST') {
@@ -158,9 +160,19 @@ export default {
       if (path.startsWith('/media/')) {
         const key=path.slice(7);
         if (!/^[0-9a-f-]{72}$/.test(key)) return new Response('Not found',{status:404});
-        const image=await env.CARDS.get(key);
-        if (!image) return new Response('Not found',{status:404});
-        return new Response(image.body,{headers:{'Content-Type':image.httpMetadata?.contentType || 'image/png','Cache-Control':'private, max-age=300','X-Content-Type-Options':'nosniff'}});
+        if(env.CARDS){
+          const image=await env.CARDS.get(key);
+          if (!image) return new Response('Not found',{status:404});
+          return new Response(image.body,{headers:{'Content-Type':image.httpMetadata?.contentType || 'image/png','Cache-Control':'private, max-age=300','X-Content-Type-Options':'nosniff'}});
+        }
+        const card=await env.DB.prepare('SELECT mime_type FROM cards WHERE object_key=?').bind(key).first<{mime_type:string}>();
+        if(!card)return new Response('Not found',{status:404});
+        const rows=await env.DB.prepare('SELECT data FROM card_chunks WHERE object_key=? ORDER BY part').bind(key).all<{data:number[]}>();
+        const total=rows.results.reduce((sum,row)=>sum+row.data.length,0);
+        if(!total||total>10000000)return new Response('Not found',{status:404});
+        const bytes=new Uint8Array(total);let offset=0;
+        for(const row of rows.results){bytes.set(row.data,offset);offset+=row.data.length;}
+        return new Response(bytes,{headers:{'Content-Type':card.mime_type,'Cache-Control':'private, max-age=300','X-Content-Type-Options':'nosniff'}});
       }
       const response=await env.ASSETS.fetch(request);
       const headers=new Headers(response.headers);

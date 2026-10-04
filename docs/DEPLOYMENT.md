@@ -2,6 +2,20 @@
 
 GitHub Pages 網址是操作示範。真正的語音、圖片與 LINE 排程在 Cloudflare Worker 網址執行。GitHub 只備份程式，不會替你管理服務金鑰。
 
+目前已部署的正式網址：[開啟說一聲](https://say-it-line-assistant.jimmy10107-tw.workers.dev)。資料庫與 Cron 已建立，不需要重做第 1 步。
+
+## 已部署版本的安全設定
+
+在本機專案資料夾執行：
+
+    node scripts/setup-secrets.mjs https://say-it-line-assistant.jimmy10107-tw.workers.dev
+
+依序輸入登入密碼、Gemini API key、LINE Channel Secret 與 Channel Access Token。輸入不顯示，不寫入檔案；完成後只傳送到 Cloudflare Secrets。再到 LINE Developers 設定以下 Webhook，按 Verify，成功後啟用 Use webhook：
+
+    https://say-it-line-assistant.jimmy10107-tw.workers.dev/api/line/webhook
+
+如果要從零建立另一個部署，再依下面步驟操作。
+
 ## 1. Cloudflare 登入與資源
 
 在專案資料夾開啟終端機：
@@ -10,10 +24,9 @@ GitHub Pages 網址是操作示範。真正的語音、圖片與 LINE 排程在 
 npm ci
 npx wrangler login
 npx wrangler d1 create voice-line-assistant
-npx wrangler r2 bucket create voice-line-cards
 ```
 
-登入授權由帳號擁有者完成。將建立 D1 後顯示的 `database_id` 填進 `wrangler.jsonc`。R2 若需要開通服務或付款資料，請自行確認費用與條款。
+登入授權由帳號擁有者完成。將建立 D1 後顯示的 `database_id` 填進 `wrangler.jsonc`。賀卡以 D1 分塊保存，不需要啟用 R2。每塊 512 KiB，單張上限 10 MB；儲存與資料庫用量仍計入 Cloudflare 帳號額度。
 
 ```sh
 npx wrangler d1 execute voice-line-assistant --remote --file=schema.sql
@@ -81,7 +94,7 @@ https://你的正式Worker網址/api/line/webhook
 2. 用自己的 LINE 加入官方帳號並傳送訊息，確認聯絡人出現；把自己暱稱設成「我自己」。
 3. 建立 2 分鐘後的提醒，確認表單的收件人與台灣時間。
 4. 關閉 App，確認 LINE 仍收到通知；提醒清單應顯示 LINE 已接受。
-5. 建立提醒後取消，确认排程不會送出。
+5. 建立提醒後取消，確認排程不會送出。
 6. 點麥克風測試雙向語音；允許瀏覽器的麥克風權限。使用耳機減少回音。
 7. 生成一張賀卡，確認畫面和文字，再排定給自己的 LINE。
 
@@ -98,7 +111,7 @@ git commit -m "Update assistant interface"
 git push
 ```
 
-Cloudflare 正式部署可在 GitHub Actions 手動執行「Deploy Cloudflare」，需先設定 repository secrets `CLOUDFLARE_API_TOKEN`、`CLOUDFLARE_ACCOUNT_ID`、`CLOUDFLARE_DATABASE_ID`。API token 僅給此部署需要的 Workers、D1 與 R2 權限。App 金鑰與登入密碼仍保存在 Cloudflare Secrets。
+Cloudflare 正式部署可在 GitHub Actions 手動執行「Deploy Cloudflare」，需先設定 repository secrets `CLOUDFLARE_API_TOKEN`、`CLOUDFLARE_ACCOUNT_ID`、`CLOUDFLARE_DATABASE_ID`。API token 僅給此部署需要的 Workers 與 D1 權限。App 金鑰與登入密碼仍保存在 Cloudflare Secrets。
 
 ## 8. 本機測試
 
@@ -108,7 +121,7 @@ Cloudflare 正式部署可在 GitHub Actions 手動執行「Deploy Cloudflare」
 PASSWORD_SALT=你產生的salt
 PASSWORD_HASH=你產生的hash
 GEMINI_API_KEY=你的金鑰
-LINE_CHANNEL_SECRET=你的LINE秘密
+LINE_CHANNEL_SECRET=你的LINESecret
 LINE_CHANNEL_ACCESS_TOKEN=你的LINE token
 PUBLIC_ORIGIN=https://你的正式Worker網址
 ```
@@ -127,8 +140,8 @@ npm run dev
 | 語音無法啟動 | HTTPS、瀏覽器麥克風權限、API key、模型名稱、額度 |
 | 聯絡人沒有出現 | Webhook 驗證、Use webhook、Channel Secret、是否有加入並傳訊息 |
 | 時間到了沒通知 | PUBLIC_ORIGIN、Cron trigger、LINE token、官方帳號額度、收件人是否封鎖 |
-| 賀卡沒有產生 | Gemini 圖片模型、付款／額度設定、R2 binding |
+| 賀卡沒有產生 | Gemini 圖片模型、付款／額度設定、D1 資料表 |
 | 發送失敗 | 提醒清單錯誤狀態與 LINE 的 HTTP 狀態；修正後重新建立提醒 |
-| 登入失败 | PASSWORD_HASH 與 PASSWORD_SALT 是否成對、15 分鐘登入嘗試限制 |
+| 登入失敗 | PASSWORD_HASH 與 PASSWORD_SALT 是否成對、15 分鐘登入嘗試限制 |
 
 提醒遇到暫時性錯誤最多嘗試 5 次。LINE API 的成功只代表接受發送，不保證收件人已讀。
